@@ -134,8 +134,7 @@ export default async function handler(req, res) {
   const userIp = req.headers["x-real-ip"] || req.connection.remoteAddress || "unknown";
 
   try {
-    // Rate limiting check commented out for testing
-    /* 
+    // 1) Check if user has exceeded 3 generations in the past hour
     const { data: logs, error: logsError } = await supabase
       .from("generation_logs")
       .select("created_at")
@@ -157,7 +156,6 @@ export default async function handler(req, res) {
         resetInMinutes: minutesLeft
       });
     }
-    */
 
     // 2) Validate prompt
     if (!prompt?.trim()) {
