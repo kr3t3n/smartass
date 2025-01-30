@@ -1,0 +1,145 @@
+.emblaWrapper {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 0;
+  overflow: visible;
+}
+
+.embla {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.emblaViewport {
+  overflow: visible;
+  width: 100%;
+}
+
+.emblaContainer {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -khtml-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.emblaSlide {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 1rem;
+  opacity: 0.4;
+  transition: all 0.4s ease;
+  transform: scale(0.95);
+}
+
+@media (min-width: 640px) {
+  .emblaSlide {
+    flex: 0 0 50%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .emblaContainer {
+    gap: 2rem;
+  }
+  
+  .emblaSlide {
+    flex: 0 0 calc(33.333% - 1.333rem);
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Only apply opacity and scale effects on mobile/tablet */
+@media (max-width: 1023px) {
+  .emblaSlide.isSelected {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.card p {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  flex-grow: 1;
+}
+
+.postToX {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  width: fit-content;
+  margin-top: auto;
+}
+
+.postToX:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dots navigation */
+.emblaDots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.emblaDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.emblaDot:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.emblaDot.isSelected {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.2);
+} 
