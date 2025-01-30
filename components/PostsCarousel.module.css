@@ -16,6 +16,7 @@
 .emblaViewport {
   overflow: hidden;
   width: 100%;
+  padding: 0 1rem;
 }
 
 .emblaContainer {
@@ -26,8 +27,8 @@
   -webkit-touch-callout: none;
   -khtml-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  margin-left: -1rem;
-  margin-right: -1rem;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .emblaSlide {
@@ -48,13 +49,15 @@
 @media (min-width: 1024px) {
   .emblaContainer {
     gap: 2rem;
-    margin-left: -2rem;
-    margin-right: -2rem;
   }
   
   .emblaSlide {
     flex: 0 0 calc(33.333% - 1.333rem);
     opacity: 1;
+  }
+
+  .emblaViewport {
+    padding: 0 2rem;
   }
 }
 

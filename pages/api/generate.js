@@ -55,10 +55,13 @@ Guidelines:
 - Be overly clever and thought-provoking
 - DON'T use hashtags and quotation marks
 - Be assertive and confident
+- Return ONLY the post text, nothing else
 
 RULES: DO NOT USE QUOTATION MARKS OR HASHTAGS`;
 
   try {
+    console.log(`🎯 Generating post for style: ${style.style}`);
+    
     const completion = await Promise.race([
       groq.chat.completions.create({
         messages: [
@@ -89,9 +92,24 @@ RULES: DO NOT USE QUOTATION MARKS OR HASHTAGS`;
     }
 
     // Clean up the response
-    return content.trim().split('\n')[0].replace(/^[^:]+:\s*/, '').trim();
+    const cleanedContent = content.trim()
+      .split('\n')[0]
+      .replace(/^[^:]+:\s*/, '')
+      .replace(/^["']|["']$/g, '') // Remove any quotes at start/end
+      .trim();
+
+    if (!cleanedContent) {
+      throw new Error('Empty content after cleanup');
+    }
+
+    if (cleanedContent.length > 280) {
+      throw new Error(`Content too long: ${cleanedContent.length} chars`);
+    }
+
+    console.log(`✅ Generated post for ${style.style}: ${cleanedContent.substring(0, 50)}...`);
+    return cleanedContent;
   } catch (error) {
-    console.error(`Failed to generate post for style ${style.style}:`, error);
+    console.error(`❌ Failed to generate post for style ${style.style}:`, error.message);
     return null;
   }
 }
@@ -116,88 +134,87 @@ export default async function handler(req, res) {
   const userIp = req.headers["x-real-ip"] || req.connection.remoteAddress || "unknown";
 
   try {
-    // 1) Check if user has exceeded 3 generations in the past hour
-    try {
-      const { data: logs, error: logsError } = await supabase
-        .from("generation_logs")
-        .select("created_at")
-        .eq("ip_address", userIp)
-        .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+    // Rate limiting check commented out for testing
+    /* 
+    const { data: logs, error: logsError } = await supabase
+      .from("generation_logs")
+      .select("created_at")
+      .eq("ip_address", userIp)
+      .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
 
-      if (logsError) {
-        console.error('⚠️ Error checking rate limit:', logsError);
-        return res.status(500).json({ message: "Error checking rate limit: " + logsError.message });
-      }
+    if (logsError) {
+      console.error('⚠️ Error checking rate limit:', logsError);
+      return res.status(500).json({ message: "Error checking rate limit: " + logsError.message });
+    }
 
-      if (logs && logs.length >= 3) {
-        const oldestLog = new Date(logs[0].created_at);
-        const timeUntilReset = new Date(oldestLog.getTime() + 60 * 60 * 1000) - new Date();
-        const minutesLeft = Math.ceil(timeUntilReset / (60 * 1000));
-        
-        return res.status(429).json({ 
-          message: `Rate limit exceeded. Try again in ${minutesLeft} minutes.`,
-          resetInMinutes: minutesLeft
-        });
-      }
-
-      // 2) Call Groq LLM
-      console.log('🤖 Generating posts...');
+    if (logs && logs.length >= 3) {
+      const oldestLog = new Date(logs[0].created_at);
+      const timeUntilReset = new Date(oldestLog.getTime() + 60 * 60 * 1000) - new Date();
+      const minutesLeft = Math.ceil(timeUntilReset / (60 * 1000));
       
-      if (!prompt?.trim()) {
-        return res.status(400).json({ message: 'Prompt is required' });
-      }
-
-      // Get 4 random styles (one extra as backup)
-      const selectedStyles = getRandomStyles(4);
-      console.log('🎨 Using styles:', selectedStyles.map(s => s.style).join(', '));
-
-      try {
-        // Generate posts in parallel with the extra style
-        const outputs = await Promise.all(
-          selectedStyles.map(style => generateSinglePost(prompt, style))
-        );
-
-        // Filter out nulls and validate outputs
-        const validOutputs = outputs
-          .filter(post => post && post.trim() && post.length <= 280)
-          .slice(0, 3); // Take only first 3 valid posts
-
-        if (validOutputs.length === 0) {
-          throw new Error('Failed to generate any valid posts');
-        }
-
-        // If we got at least one valid post, consider it a success
-        console.log(`✨ Generated ${validOutputs.length} posts successfully!`);
-        
-        // Store in Supabase
-        const { error: insertError } = await supabase.from("generation_logs").insert({
-          ip_address: userIp,
-          prompt: prompt,
-          output: JSON.stringify(validOutputs)
-        });
-
-        if (insertError) {
-          console.error('⚠️ Error storing generation log:', insertError);
-          // Continue anyway as this shouldn't block the response
-        }
-
-        // Return whatever valid posts we have (1-3)
-        return res.status(200).json({ outputs: validOutputs });
-      } catch (groqError) {
-        console.error('❌ Groq API error:', groqError);
-        return res.status(500).json({ 
-          message: 'Failed to generate posts. Please try again.' 
-        });
-      }
-    } catch (supabaseError) {
-      console.error('❌ Supabase error:', supabaseError);
-      return res.status(500).json({ 
-        message: 'Database error. Please try again.' 
+      return res.status(429).json({ 
+        message: `Rate limit exceeded. Try again in ${minutesLeft} minutes.`,
+        resetInMinutes: minutesLeft
       });
     }
+    */
+
+    // 2) Validate prompt
+    if (!prompt?.trim()) {
+      return res.status(400).json({ message: 'Prompt is required' });
+    }
+
+    // 3) Generate posts
+    console.log('🤖 Generating posts...');
+    
+    // Get 4 random styles (one extra as backup)
+    const selectedStyles = getRandomStyles(4);
+    console.log('🎨 Selected styles:', selectedStyles.map(s => s.style).join(', '));
+
+    // Generate posts in parallel with the extra style
+    const outputs = await Promise.all(
+      selectedStyles.map(style => generateSinglePost(prompt, style))
+    );
+
+    console.log('🔍 Raw outputs:', outputs);
+
+    // Filter out nulls and validate outputs
+    const validOutputs = outputs
+      .filter(post => {
+        const isValid = post && post.trim() && post.length <= 280;
+        if (!isValid) {
+          console.log('❌ Invalid post:', { post, length: post?.length });
+        }
+        return isValid;
+      })
+      .slice(0, 3); // Take only first 3 valid posts
+
+    console.log('✅ Valid outputs:', validOutputs);
+
+    if (validOutputs.length === 0) {
+      throw new Error('Failed to generate any valid posts');
+    }
+
+    // If we got at least one valid post, consider it a success
+    console.log(`✨ Generated ${validOutputs.length} posts successfully!`);
+    
+    // Store in Supabase (keeping this for tracking)
+    const { error: insertError } = await supabase.from("generation_logs").insert({
+      ip_address: userIp,
+      prompt: prompt,
+      output: JSON.stringify(validOutputs)
+    });
+
+    if (insertError) {
+      console.error('⚠️ Error storing generation log:', insertError);
+      // Continue anyway as this shouldn't block the response
+    }
+
+    // Return whatever valid posts we have (1-3)
+    return res.status(200).json({ outputs: validOutputs });
   } catch (error) {
     console.error('❌ Unexpected error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       message: 'An unexpected error occurred. Please try again.' 
     });
   }

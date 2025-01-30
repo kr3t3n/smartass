@@ -5,11 +5,11 @@ import styles from "./PostsCarousel.module.css";
 export default function PostsCarousel({ posts, constructXLink }) {
   // Initialize carousel with options
   const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "center",
+    align: "start",
     containScroll: "trimSnaps",
     dragFree: true,
     skipSnaps: false,
-    inViewThreshold: 0.7,
+    startIndex: 0,
     breakpoints: {
       '(min-width: 1024px)': { 
         dragFree: false,
