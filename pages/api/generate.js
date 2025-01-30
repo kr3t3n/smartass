@@ -48,18 +48,13 @@ function getRandomStyles(count = 3) {
 
 async function generateSinglePost(prompt, style) {
   const systemPrompt = `You are a pretentious social media guru who crafts smart-sounding posts.
-Write ONE post in the style of a "${style.style}" who is ${style.traits}.
+Write one post in the style of a "${style.style}" who is ${style.traits}.
 
 Guidelines:
 - Must be under 280 characters (max 2-3 sentences)
-- Be clever and thought-provoking
-- Avoid clichés and obvious statements
+- Be overly clever and thought-provoking
 - NO hashtags
-- Don't use quotes unless absolutely necessary
-- Don't start with "Ah," or "Oh," or similar interjections
-- Be assertive and confident
-
-Format: Generate exactly ONE post, nothing else. No labels, no prefixes, just the post content.`;
+- Be assertive and confident`;
 
   const completion = await groq.chat.completions.create({
     messages: [
