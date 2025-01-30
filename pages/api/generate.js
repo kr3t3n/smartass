@@ -54,7 +54,9 @@ Guidelines:
 - Must be under 280 characters (max 2-3 sentences)
 - Be overly clever and thought-provoking
 - DON'T use hashtags and quotation marks
-- Be assertive and confident`;
+- Be assertive and confident
+
+RULES: DO NOT USE QUOTATION MARKS OR HASHTAGS`;
 
   const completion = await groq.chat.completions.create({
     messages: [
