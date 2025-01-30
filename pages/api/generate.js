@@ -53,7 +53,7 @@ Write one post in the style of a "${style.style}" who is ${style.traits}.
 Guidelines:
 - Must be under 280 characters (max 2-3 sentences)
 - Be overly clever and thought-provoking
-- NO hashtags
+- DON'T use hashtags and quotation marks
 - Be assertive and confident`;
 
   const completion = await groq.chat.completions.create({
