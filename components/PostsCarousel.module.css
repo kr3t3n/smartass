@@ -3,18 +3,18 @@
   width: 100%;
   margin: 0 auto;
   padding: 1.5rem 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .embla {
   position: relative;
   width: 100%;
   margin: 0 auto;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .emblaViewport {
-  overflow: visible;
+  overflow: hidden;
   width: 100%;
 }
 
@@ -26,6 +26,8 @@
   -webkit-touch-callout: none;
   -khtml-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  margin-left: -1rem;
+  margin-right: -1rem;
 }
 
 .emblaSlide {
@@ -33,9 +35,8 @@
   flex: 0 0 100%;
   min-width: 0;
   padding: 1rem;
+  transition: opacity 0.4s ease;
   opacity: 0.4;
-  transition: all 0.4s ease;
-  transform: scale(0.95);
 }
 
 @media (min-width: 640px) {
@@ -47,20 +48,20 @@
 @media (min-width: 1024px) {
   .emblaContainer {
     gap: 2rem;
+    margin-left: -2rem;
+    margin-right: -2rem;
   }
   
   .emblaSlide {
     flex: 0 0 calc(33.333% - 1.333rem);
     opacity: 1;
-    transform: scale(1);
   }
 }
 
-/* Only apply opacity and scale effects on mobile/tablet */
+/* Only apply opacity effects on mobile/tablet */
 @media (max-width: 1023px) {
   .emblaSlide.isSelected {
     opacity: 1;
-    transform: scale(1);
   }
 }
 

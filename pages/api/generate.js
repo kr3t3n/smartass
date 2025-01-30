@@ -58,32 +58,42 @@ Guidelines:
 
 RULES: DO NOT USE QUOTATION MARKS OR HASHTAGS`;
 
-  const completion = await groq.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: systemPrompt
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ],
-    model: "mixtral-8x7b-32768",
-    temperature: 0.9,
-    top_p: 0.9,
-    max_tokens: 300,
-    frequency_penalty: 0.7,
-    presence_penalty: 0.7
-  });
+  try {
+    const completion = await Promise.race([
+      groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        model: "mixtral-8x7b-32768",
+        temperature: 0.9,
+        top_p: 0.9,
+        max_tokens: 300,
+        frequency_penalty: 0.7,
+        presence_penalty: 0.7
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Generation timeout')), 30000)
+      )
+    ]);
 
-  const content = completion.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error('No content generated');
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content generated');
+    }
+
+    // Clean up the response
+    return content.trim().split('\n')[0].replace(/^[^:]+:\s*/, '').trim();
+  } catch (error) {
+    console.error(`Failed to generate post for style ${style.style}:`, error);
+    return null;
   }
-
-  // Clean up the response
-  return content.trim().split('\n')[0].replace(/^[^:]+:\s*/, '').trim();
 }
 
 export default async function handler(req, res) {
@@ -137,26 +147,27 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Prompt is required' });
       }
 
-      // Get 3 random styles
-      const selectedStyles = getRandomStyles();
+      // Get 4 random styles (one extra as backup)
+      const selectedStyles = getRandomStyles(4);
       console.log('🎨 Using styles:', selectedStyles.map(s => s.style).join(', '));
 
       try {
-        // Generate posts in parallel
+        // Generate posts in parallel with the extra style
         const outputs = await Promise.all(
           selectedStyles.map(style => generateSinglePost(prompt, style))
         );
 
-        // Validate outputs
-        const validOutputs = outputs.filter(post => 
-          post && post.trim() && post.length <= 280
-        );
+        // Filter out nulls and validate outputs
+        const validOutputs = outputs
+          .filter(post => post && post.trim() && post.length <= 280)
+          .slice(0, 3); // Take only first 3 valid posts
 
-        if (validOutputs.length < 3) {
-          throw new Error('Failed to generate all posts');
+        if (validOutputs.length === 0) {
+          throw new Error('Failed to generate any valid posts');
         }
 
-        console.log('✨ Generated posts successfully!');
+        // If we got at least one valid post, consider it a success
+        console.log(`✨ Generated ${validOutputs.length} posts successfully!`);
         
         // Store in Supabase
         const { error: insertError } = await supabase.from("generation_logs").insert({
@@ -170,17 +181,24 @@ export default async function handler(req, res) {
           // Continue anyway as this shouldn't block the response
         }
 
+        // Return whatever valid posts we have (1-3)
         return res.status(200).json({ outputs: validOutputs });
       } catch (groqError) {
         console.error('❌ Groq API error:', groqError);
-        return res.status(500).json({ message: 'Error calling Groq API: ' + groqError.message });
+        return res.status(500).json({ 
+          message: 'Failed to generate posts. Please try again.' 
+        });
       }
     } catch (supabaseError) {
       console.error('❌ Supabase error:', supabaseError);
-      return res.status(500).json({ message: 'Database error: ' + supabaseError.message });
+      return res.status(500).json({ 
+        message: 'Database error. Please try again.' 
+      });
     }
   } catch (error) {
     console.error('❌ Unexpected error:', error);
-    res.status(500).json({ message: 'Unexpected error: ' + error.message });
+    res.status(500).json({ 
+      message: 'An unexpected error occurred. Please try again.' 
+    });
   }
 }

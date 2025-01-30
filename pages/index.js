@@ -35,9 +35,19 @@ export default function Home() {
         throw new Error(data.message || "Failed to generate posts");
       }
       
+      if (!data.outputs || data.outputs.length === 0) {
+        throw new Error("No valid posts were generated. Please try again.");
+      }
+
       setOutputs(data.outputs);
+      
+      // If we got fewer than 3 posts, show a warning
+      if (data.outputs.length < 3) {
+        setError(`Generated ${data.outputs.length} post${data.outputs.length === 1 ? '' : 's'} instead of 3. You can try again for more variations.`);
+      }
     } catch (err) {
       setError(err.message || "Failed to reach server");
+      setOutputs([]); // Clear any partial results on error
     } finally {
       setIsGenerating(false);
     }
@@ -88,7 +98,7 @@ export default function Home() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Enter your pompous idea..."
+                placeholder="Enter your pompous idea... (e.g., 'water is the source of all life')"
                 disabled={isGenerating}
               />
               <button 
